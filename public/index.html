@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GraphQL + Groq AI Dev Console</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      font-family: "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+    .panel {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .left { border-right: 2px solid #30363d; }
+    h2 { margin-bottom: 10px; }
+    textarea {
+      flex: 1;
+      background: #161b22;
+      color: #e6edf3;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      resize: none;
+    }
+    button {
+      background: #238636;
+      color: white;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    button:hover { background: #2ea043; }
+    pre {
+      flex: 1;
+      background: #161b22;
+      padding: 10px;
+      border-radius: 8px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- GraphQL Panel -->
+  <div class="panel left">
+    <h2>⚡ GraphQL Playground</h2>
+    <textarea id="graphqlQuery">{ players { first_name last_name } }</textarea>
+    <button onclick="runQuery()">Run Query</button>
+    <pre id="graphqlResult">Results will appear here...</pre>
+  </div>
+
+  <!-- AI Helper Panel -->
+  <div class="panel">
+    <h2>🧠 Groq AI Assistant</h2>
+    <textarea id="aiQuestion" placeholder="Ask about GraphQL syntax or examples..."></textarea>
+    <button onclick="askAI()">Ask AI</button>
+    <pre id="aiResponse">AI suggestions will appear here...</pre>
+  </div>
+
+  <script>
+    async function runQuery() {
+      const query = document.getElementById("graphqlQuery").value;
+      const res = await fetch("/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      const data = await res.json();
+      document.getElementById("graphqlResult").innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function askAI() {
+      const question = document.getElementById("aiQuestion").value;
+      const res = await fetch("/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `query { aiHelp(question: """${question}""") }`,
+        }),
+      });
+      const data = await res.json();
+      document.getElementById("aiResponse").innerText = data.data.aiHelp || "Error fetching response";
+    }
+  </script>
+</body>
+</html>
