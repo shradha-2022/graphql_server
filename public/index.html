@@ -54,19 +54,47 @@
       white-space: pre-wrap;
       margin-top: 10px;
     }
+    #ai-icon {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    #ai-sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 400px;
+      height: 100%;
+      background: #0d1117;
+      border-left: 2px solid #30363d;
+      transform: translateX(100%);
+      transition: transform 0.3s ease-in-out;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    #ai-sidebar.open {
+      transform: translateX(0);
+    }
   </style>
 </head>
 <body>
   <!-- GraphQL Panel -->
   <div class="panel left">
     <h2>⚡ GraphQL Playground</h2>
-    <textarea id="graphqlQuery">{ players { first_name last_name } }</textarea>
+    <textarea id="graphqlQuery">{ books { id title author } }</textarea>
     <button onclick="runQuery()">Run Query</button>
     <pre id="graphqlResult">Results will appear here...</pre>
   </div>
 
+  <!-- AI Helper Icon -->
+  <div id="ai-icon" onclick="toggleAI()"><p>🧠</p></div>
+
   <!-- AI Helper Panel -->
-  <div class="panel">
+  <div id="ai-sidebar">
     <h2>🧠 Groq AI Assistant</h2>
     <textarea id="aiQuestion" placeholder="Ask about GraphQL syntax or examples..."></textarea>
     <button onclick="askAI()">Ask AI</button>
@@ -87,15 +115,28 @@
 
     async function askAI() {
       const question = document.getElementById("aiQuestion").value;
+      const query = `
+        query AiAssistant($prompt: String!) {
+          aiAssistant(prompt: $prompt)
+        }
+      `;
+      const variables = { prompt: question };
       const res = await fetch("/api", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `query { aiHelp(question: """${question}""") }`,
-        }),
+        body: JSON.stringify({ query, variables }),
       });
       const data = await res.json();
-      document.getElementById("aiResponse").innerText = data.data.aiHelp || "Error fetching response";
+      if (data.errors) {
+        document.getElementById("aiResponse").innerText = JSON.stringify(data.errors, null, 2);
+      } else {
+        document.getElementById("aiResponse").innerText = data.data.aiAssistant || "Error fetching response";
+      }
+    }
+
+    function toggleAI() {
+      const sidebar = document.getElementById("ai-sidebar");
+      sidebar.classList.toggle("open");
     }
   </script>
 </body>
